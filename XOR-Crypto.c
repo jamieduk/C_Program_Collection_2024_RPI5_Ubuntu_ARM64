@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 // gcc -o XOR-Crypto XOR-Crypto.c $(pkg-config --cflags --libs gtk+-3.0)
-
+// sudo cp XOR-Crypto ~/.local/bin/XOR-Crypto
 #define KEY_LENGTH 12000  // Define the key length
 
 char XORkey[KEY_LENGTH];  // Key will be loaded or generated
@@ -96,8 +96,8 @@ void about_dialog(GtkWidget *widget, gpointer window) {
                                     GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_OK,
                                     "XOR Encrypt/Decrypt GUI\n"
-                                    "Author: Your Name\n"
-                                    "This program uses XOR encryption for basic security.\n"
+                                    "Author: Jay @ J~Net 2024\n"
+                                    "This program uses XOR encryption for basic text encryption.\n"
                                     "Keys can be generated or loaded from a file.");
     gtk_window_set_title(GTK_WINDOW(dialog), "About");
     gtk_dialog_run(GTK_DIALOG(dialog));
