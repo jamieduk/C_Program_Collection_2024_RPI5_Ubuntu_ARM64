@@ -4,6 +4,7 @@
 #include <string.h>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
+// gcc account_manager.c -o account_manager `pkg-config --cflags --libs gtk+-3.0` -lssl -lcrypto
 
 #define AES_KEY_LENGTH 128
 #define AES_BLOCK_SIZE 16
