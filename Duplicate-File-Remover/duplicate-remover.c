@@ -114,25 +114,54 @@ void remove_duplicates(const char *directory, gboolean recursive, gboolean auto_
     closedir(dir);
 }
 
-// Function to start scanning for duplicates
-void start_scan(GtkButton *button, gpointer user_data) {
-    gboolean recursive=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(recursive_check));
-    gboolean auto_remove=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(auto_remove_check));
-
-    GHashTable *hash_table=g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
+typedef struct {
+    GHashTable *hash_table;
+    gboolean recursive;
+    gboolean auto_remove;
     GtkTreeIter iter;
-    gboolean valid=gtk_tree_model_get_iter_first(GTK_TREE_MODEL(directory_store), &iter);
-    while (valid) {
-        gchar *directory;
-        gtk_tree_model_get(GTK_TREE_MODEL(directory_store), &iter, 0, &directory, -1);
-        remove_duplicates(directory, recursive, auto_remove, hash_table);
-        g_free(directory);
-        valid=gtk_tree_model_iter_next(GTK_TREE_MODEL(directory_store), &iter);
+    GtkTreeModel *model;
+    GtkWidget *status_label;
+} ScanData;
+
+gboolean process_directory(gpointer user_data) {
+    ScanData *data = (ScanData *)user_data;
+    gchar *directory;
+
+    if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(data->model), &data->iter)) {
+        gtk_label_set_text(GTK_LABEL(data->status_label), "Scan complete");
+        g_hash_table_destroy(data->hash_table);
+        g_free(data);
+        return FALSE; // Stop the idle function
     }
 
-    g_hash_table_destroy(hash_table);
-    gtk_label_set_text(GTK_LABEL(user_data), "Scan complete");
+    do {
+        gtk_tree_model_get(GTK_TREE_MODEL(data->model), &data->iter, 0, &directory, -1);
+        remove_duplicates(directory, data->recursive, data->auto_remove, data->hash_table);
+        g_free(directory);
+    } while (gtk_tree_model_iter_next(GTK_TREE_MODEL(data->model), &data->iter));
+
+    gtk_label_set_text(GTK_LABEL(data->status_label), "Scan complete");
+    g_hash_table_destroy(data->hash_table);
+    g_free(data);
+    return FALSE; // Stop the idle function
+}
+
+// Function to start scanning for duplicates
+void start_scan(GtkButton *button, gpointer user_data) {
+    gboolean recursive = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(recursive_check));
+    gboolean auto_remove = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(auto_remove_check));
+
+    GHashTable *hash_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+    ScanData *data = g_malloc(sizeof(ScanData));
+    data->hash_table = hash_table;
+    data->recursive = recursive;
+    data->auto_remove = auto_remove;
+    data->model = GTK_TREE_MODEL(directory_store);
+    data->status_label = GTK_WIDGET(user_data);
+
+    gtk_label_set_text(GTK_LABEL(user_data), "Scanning...");
+    g_idle_add(process_directory, data); // Process the directories incrementally
 }
 
 // Function to display the "About" dialog
