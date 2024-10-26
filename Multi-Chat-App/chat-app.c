@@ -21,6 +21,10 @@ struct sockaddr_in server_addr, client_addr;
 socklen_t client_addr_size=sizeof(client_addr);
 char room[50]="Lobby";
 char username[50]="User";
+int server_port=DEFAULT_PORT;
+PangoFontDescription *font_description;
+GdkRGBA font_color;
+int private_messages_enabled=0; // 0 for disabled, 1 for enabled
 pthread_t tid;
 
 // Function prototypes
@@ -36,6 +40,7 @@ void update_room_list();
 void connect_as_client(int port);
 void load_settings();
 void save_settings();
+void apply_font_settings();
 
 int main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
@@ -62,6 +67,7 @@ int main(int argc, char *argv[]) {
     // Create text view for chat
     textview_chat=gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(textview_chat), FALSE);
+    apply_font_settings(); // Apply the font settings
     gtk_box_pack_start(GTK_BOX(vbox), textview_chat, TRUE, TRUE, 0);
 
     // Create entry for message input
@@ -104,14 +110,14 @@ int main(int argc, char *argv[]) {
     // Configure server address
     server_addr.sin_family=AF_INET;
     server_addr.sin_addr.s_addr=INADDR_ANY; // Accept connections from any IP
-    server_addr.sin_port=htons(DEFAULT_PORT); // Use default port
+    server_addr.sin_port=htons(server_port); // Use user-defined port
 
     // Bind socket
     if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("Bind failed");
         close(server_sock);
-        printf("Attempting to connect as a client to port %d...\n", DEFAULT_PORT);
-        connect_as_client(DEFAULT_PORT);
+        printf("Attempting to connect as a client to port %d...\n", server_port);
+        connect_as_client(server_port);
     } else {
         // Start listening
         if (listen(server_sock, MAX_CLIENTS) < 0) {
@@ -119,7 +125,7 @@ int main(int argc, char *argv[]) {
             close(server_sock);
             exit(EXIT_FAILURE);
         }
-        printf("Server is listening on port %d...\n", DEFAULT_PORT);
+        printf("Server is listening on port %d...\n", server_port);
 
         pthread_create(&tid, NULL, client_listener, NULL);
     }
@@ -193,38 +199,6 @@ void show_about(GtkWidget *widget, gpointer data) {
     gtk_widget_destroy(dialog);
 }
 
-void settings_menu(GtkWidget *widget, gpointer data) {
-    // Create the dialog with a title and modal
-    GtkWidget *dialog=gtk_dialog_new_with_buttons("Settings",
-                                                    GTK_WINDOW(window),
-                                                    GTK_DIALOG_MODAL,
-                                                    "_OK", GTK_RESPONSE_OK,
-                                                    "_Cancel", GTK_RESPONSE_CANCEL,
-                                                    NULL);
-
-    GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-
-    // Create labels and entries for various settings
-    GtkWidget *username_label=gtk_label_new("Username:");
-    GtkWidget *username_entry=gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(username_entry), username);
-
-    gtk_box_pack_start(GTK_BOX(content_area), username_label, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(content_area), username_entry, FALSE, FALSE, 0);
-
-    gtk_widget_show_all(dialog);
-
-    // Run dialog and wait for user response
-    int response=gtk_dialog_run(GTK_DIALOG(dialog));
-    if (response == GTK_RESPONSE_OK) {
-        // Save settings
-        strncpy(username, gtk_entry_get_text(GTK_ENTRY(username_entry)), sizeof(username));
-        save_settings();
-    }
-
-    gtk_widget_destroy(dialog);
-}
-
 void create_room(GtkWidget *widget, gpointer data) {
     GtkWidget *dialog=gtk_dialog_new_with_buttons("Create Room",
                                                     GTK_WINDOW(window),
@@ -235,6 +209,7 @@ void create_room(GtkWidget *widget, gpointer data) {
 
     GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     GtkWidget *room_entry=gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(room_entry), "Enter room name...");
     gtk_box_pack_start(GTK_BOX(content_area), room_entry, FALSE, FALSE, 0);
     gtk_widget_show_all(dialog);
 
@@ -248,63 +223,130 @@ void create_room(GtkWidget *widget, gpointer data) {
 }
 
 void join_room(const char *room_name) {
-    strncpy(room, room_name, sizeof(room));
+    // Change the room and update the UI
+    snprintf(room, sizeof(room), "%s", room_name);
     update_room_list();
 }
 
 void update_room_list() {
-    // Update room list view
-    gtk_list_box_prepend(GTK_LIST_BOX(room_list), gtk_label_new(room));
-    gtk_widget_show_all(room_list);
+    gtk_list_box_select_all(GTK_LIST_BOX(room_list)); // Clear current selection
+    gtk_list_box_insert(GTK_LIST_BOX(room_list), gtk_label_new(room), -1);
 }
 
 void connect_as_client(int port) {
-    // Connect to the server
+    // Connect to the server as a client
     client_sock=socket(AF_INET, SOCK_STREAM, 0);
     if (client_sock < 0) {
-        perror("Socket creation failed");
+        perror("Client socket creation failed");
         exit(EXIT_FAILURE);
     }
 
-    struct sockaddr_in server_addr;
-    server_addr.sin_family=AF_INET;
-    server_addr.sin_port=htons(port);
-    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr); // Use loopback address for local testing
+    client_addr.sin_family=AF_INET;
+    client_addr.sin_addr.s_addr=inet_addr("127.0.0.1");
+    client_addr.sin_port=htons(port);
 
-    if (connect(client_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Connection failed");
+    if (connect(client_sock, (struct sockaddr *)&client_addr, sizeof(client_addr)) < 0) {
+        perror("Client connection failed");
+        close(client_sock);
         exit(EXIT_FAILURE);
     }
+
     printf("Connected to server on port %d\n", port);
 }
 
 void load_settings() {
-    // Load settings from the JSON file
     FILE *file=fopen(SETTINGS_FILE, "r");
     if (file) {
         char buffer[256];
-        fread(buffer, 1, sizeof(buffer), file);
+        while (fgets(buffer, sizeof(buffer), file)) {
+            json_object *json_obj=json_tokener_parse(buffer);
+            if (json_obj) {
+                json_object *username_obj, *room_obj, *port_obj, *font_obj, *color_obj;
+                if (json_object_object_get_ex(json_obj, "username", &username_obj))
+                    strcpy(username, json_object_get_string(username_obj));
+                if (json_object_object_get_ex(json_obj, "room", &room_obj))
+                    strcpy(room, json_object_get_string(room_obj));
+                if (json_object_object_get_ex(json_obj, "port", &port_obj))
+                    server_port=json_object_get_int(port_obj);
+                if (json_object_object_get_ex(json_obj, "font", &font_obj))
+                    font_description=pango_font_description_from_string(json_object_get_string(font_obj));
+                if (json_object_object_get_ex(json_obj, "color", &color_obj)) {
+                    const char *color_string=json_object_get_string(color_obj);
+                    gdk_rgba_parse(&font_color, color_string);
+                }
+                json_object_put(json_obj); // Free memory
+            }
+        }
         fclose(file);
-
-        struct json_object *parsed_json=json_tokener_parse(buffer);
-        struct json_object *json_username;
-        json_object_object_get_ex(parsed_json, "username", &json_username);
-        strcpy(username, json_object_get_string(json_username));
-        json_object_put(parsed_json);
     }
 }
 
 void save_settings() {
-    // Save settings to the JSON file
-    struct json_object *json_object=json_object_new_object();
-    json_object_object_add(json_object, "username", json_object_new_string(username));
-
     FILE *file=fopen(SETTINGS_FILE, "w");
     if (file) {
-        const char *json_str=json_object_to_json_string(json_object);
-        fprintf(file, "%s", json_str);
+        fprintf(file, "{\n");
+        fprintf(file, "  \"username\": \"%s\",\n", username);
+        fprintf(file, "  \"room\": \"%s\",\n", room);
+        fprintf(file, "  \"port\": %d,\n", server_port);
+        fprintf(file, "  \"font\": \"%s\",\n", pango_font_description_to_string(font_description));
+        fprintf(file, "  \"color\": \"%s\"\n", gdk_rgba_to_string(&font_color));
+        fprintf(file, "}\n");
         fclose(file);
     }
-    json_object_put(json_object);
+}
+
+void settings_menu(GtkWidget *widget, gpointer data) {
+    GtkWidget *dialog=gtk_dialog_new_with_buttons("Settings",
+                                                    GTK_WINDOW(window),
+                                                    GTK_DIALOG_MODAL,
+                                                    "_Save", GTK_RESPONSE_OK,
+                                                    "_Cancel", GTK_RESPONSE_CANCEL,
+                                                    NULL);
+
+    GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    GtkWidget *username_entry=gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(username_entry), username);
+    gtk_box_pack_start(GTK_BOX(content_area), username_entry, FALSE, FALSE, 0);
+
+    GtkWidget *port_entry=gtk_entry_new();
+    char port_buffer[10];
+    snprintf(port_buffer, sizeof(port_buffer), "%d", server_port);
+    gtk_entry_set_text(GTK_ENTRY(port_entry), port_buffer);
+    gtk_box_pack_start(GTK_BOX(content_area), port_entry, FALSE, FALSE, 0);
+
+    gtk_widget_show_all(dialog);
+
+    int response=gtk_dialog_run(GTK_DIALOG(dialog));
+    if (response == GTK_RESPONSE_OK) {
+        strcpy(username, gtk_entry_get_text(GTK_ENTRY(username_entry)));
+        server_port=atoi(gtk_entry_get_text(GTK_ENTRY(port_entry)));
+        save_settings();
+    }
+
+    gtk_widget_destroy(dialog);
+}
+
+void apply_font_settings() {
+    // Create a CSS provider
+    GtkCssProvider *css_provider=gtk_css_provider_new();
+    
+    // Construct the CSS string
+    char css_string[256];
+    snprintf(css_string, sizeof(css_string),
+             "textview_chat { font-family: '%s'; font-size: 12px; color: rgba(%d, %d, %d, %f); }",
+             pango_font_description_get_family(font_description),
+             (int)(font_color.red * 255), (int)(font_color.green * 255),
+             (int)(font_color.blue * 255), font_color.alpha);
+    
+    // Load the CSS string
+    gtk_css_provider_load_from_data(css_provider, css_string, -1, NULL);
+    
+    // Apply the CSS provider to the text view
+    gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+                                              GTK_STYLE_PROVIDER(css_provider),
+                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
+    
+    // Clean up
+    g_object_unref(css_provider);
 }
 
