@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     GtkWidget *window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Calculator");
     gtk_window_set_default_size(GTK_WINDOW(window), 300, 400);  // Smaller default size
-    gtk_container_set_border_width(GTK_CONTAINER(window), 5);  // Remove extra padding
+    gtk_container_set_border_width(GTK_CONTAINER(window), 15);  // Remove extra padding
 
     // Create a grid layout with zero spacing
     GtkWidget *grid=gtk_grid_new();
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 
     // Apply CSS for larger font
     GtkCssProvider *css_provider=gtk_css_provider_new();
-    gtk_css_provider_load_from_data(css_provider, "entry { font-size: 24px; }", -1, NULL);
+    gtk_css_provider_load_from_data(css_provider, "entry { font-size: 28px; }", -1, NULL);
     gtk_style_context_add_provider(gtk_widget_get_style_context(entry_display), GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
     gtk_grid_attach(GTK_GRID(grid), entry_display, 0, 0, 4, 1);
