@@ -1,17 +1,21 @@
+// gcc -o simple-calc simple-calc.c `pkg-config --cflags --libs gtk+-3.0` -lm
+//
 #include <gtk/gtk.h>
 #include <math.h>
+#include <string.h>
 
 // Function prototypes
 void on_button_click(GtkWidget *widget, gpointer data);
 void calculate_result();
 void show_author_info();
 void copy_to_clipboard(GtkWidget *widget);
-void toggle_advanced_mode();
+void toggle_advanced_mode(GtkWidget *widget);
+void update_display(const gchar *text);
 
 // Global variables
-GtkWidget *entry_display, *grid;
-gchar operation;
-gdouble first_number=0;
+GtkWidget *entry_display, *grid_advanced;
+gchar operation='\0';
+gdouble first_number=0, memory_value=0;
 gboolean advanced_mode=FALSE;
 
 int main(int argc, char *argv[]) {
@@ -20,38 +24,60 @@ int main(int argc, char *argv[]) {
     // Create main window
     GtkWidget *window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Simple Calculator");
-    gtk_window_set_default_size(GTK_WINDOW(window), 300, 400);
-    gtk_container_set_border_width(GTK_CONTAINER(window), 10);
+    gtk_window_set_default_size(GTK_WINDOW(window), 300, 400);  // Smaller default size
+    gtk_container_set_border_width(GTK_CONTAINER(window), 5);  // Remove extra padding
 
-    // Create a grid layout
-    grid=gtk_grid_new();
+    // Create a grid layout with zero spacing
+    GtkWidget *grid=gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 0);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 0);
     gtk_container_add(GTK_CONTAINER(window), grid);
 
     // Create entry display (non-editable)
     entry_display=gtk_entry_new();
-    gtk_widget_set_sensitive(entry_display, FALSE); // Make it non-editable
+    gtk_widget_set_sensitive(entry_display, FALSE);
+
+    // Apply CSS for larger font
+    GtkCssProvider *css_provider=gtk_css_provider_new();
+    gtk_css_provider_load_from_data(css_provider, "entry { font-size: 24px; }", -1, NULL);
+    gtk_style_context_add_provider(gtk_widget_get_style_context(entry_display), GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+
     gtk_grid_attach(GTK_GRID(grid), entry_display, 0, 0, 4, 1);
 
-    // Define basic button labels
+    // Define button labels (including updated "CLR" label)
     const gchar *button_labels[]={
-        "7", "8", "9", "/",
-        "4", "5", "6", "*",
-        "1", "2", "3", "-",
-        "0", ".", "CLR", "+",
-        "Copy", "About", "=", "Adv"
+        "1", "2", "3", "+",
+        "4", "5", "6", "-",
+        "7", "8", "9", "*",
+        "0", ".", "=", "/",
+        "CLR", "Copy", "MC", 
+        "%", "sin","cos", "tan",
+        "log","sqrt", "M+", "MR", 
+        "About"
     };
 
-    // Create buttons and attach them to the grid for basic mode
+    // Create buttons and attach to grid
     int num_buttons=sizeof(button_labels) / sizeof(button_labels[0]);
-    for (int i=0; i < num_buttons; i++) {
+    for (int i=0; i<num_buttons; i++) {
         GtkWidget *button=gtk_button_new_with_label(button_labels[i]);
         g_signal_connect(button, "clicked", G_CALLBACK(on_button_click), (gpointer)button_labels[i]);
-
-        // Set size for all buttons
         gtk_widget_set_size_request(button, 60, 60);
-
         gtk_grid_attach(GTK_GRID(grid), button, i % 4, (i / 4) + 1, 1, 1);
     }
+
+    // Advanced mode grid for scientific functions
+    grid_advanced=gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(grid_advanced), 0);
+    gtk_grid_set_column_spacing(GTK_GRID(grid_advanced), 0);
+    gtk_grid_attach(GTK_GRID(grid), grid_advanced, 0, 6, 4, 4);
+    const gchar *advanced_labels[]={"sin", "cos", "tan", "log", "sqrt"};
+    for (int i=0; i<5; i++) {
+        GtkWidget *adv_button=gtk_button_new_with_label(advanced_labels[i]);
+        g_signal_connect(adv_button, "clicked", G_CALLBACK(on_button_click), (gpointer)advanced_labels[i]);
+        gtk_widget_set_size_request(adv_button, 60, 60);
+        gtk_grid_attach(GTK_GRID(grid_advanced), adv_button, i % 3, i / 3, 1, 1);
+    }
+    gtk_widget_set_visible(grid_advanced, FALSE);
 
     // Connect the destroy signal for the window
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -65,12 +91,17 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+// Update display with text
+void update_display(const gchar *text) {
+    gtk_entry_set_text(GTK_ENTRY(entry_display), text);
+}
+
 // Callback function for button clicks
 void on_button_click(GtkWidget *widget, gpointer data) {
     const gchar *label=(const gchar *)data;
 
     if (g_strcmp0(label, "CLR") == 0) {
-        gtk_entry_set_text(GTK_ENTRY(entry_display), "");
+        update_display("");
         first_number=0;
         operation='\0';
     } else if (g_strcmp0(label, "=") == 0) {
@@ -79,40 +110,47 @@ void on_button_click(GtkWidget *widget, gpointer data) {
         copy_to_clipboard(widget);
     } else if (g_strcmp0(label, "About") == 0) {
         show_author_info();
-    } else if (g_strcmp0(label, "Adv") == 0) {
-        toggle_advanced_mode();
+    } else if (g_strcmp0(label, "ADV") == 0) {
+        advanced_mode=!advanced_mode;
+        gtk_widget_set_visible(grid_advanced, advanced_mode);
+    } else if (g_strcmp0(label, "M+") == 0) {
+        memory_value=atof(gtk_entry_get_text(GTK_ENTRY(entry_display)));
+    } else if (g_strcmp0(label, "MR") == 0) {
+        gchar *mem_text=g_strdup_printf("%.2f", memory_value);
+        update_display(mem_text);
+        g_free(mem_text);
+    } else if (g_strcmp0(label, "MC") == 0) {
+        memory_value=0;
+    } else if (g_strcmp0(label, "+") == 0 || g_strcmp0(label, "-") == 0 ||
+               g_strcmp0(label, "*") == 0 || g_strcmp0(label, "/") == 0 || g_strcmp0(label, "%") == 0) {
+        if (operation == label[0]) {
+            // If same operator is pressed consecutively, repeat last operation
+            calculate_result();
+        } else {
+            first_number=atof(gtk_entry_get_text(GTK_ENTRY(entry_display)));
+            operation=label[0];
+            update_display("");
+        }
+    } else if (g_strcmp0(label, "sin") == 0 || g_strcmp0(label, "cos") == 0 ||
+               g_strcmp0(label, "tan") == 0 || g_strcmp0(label, "log") == 0 ||
+               g_strcmp0(label, "sqrt") == 0) {
+        gdouble value=atof(gtk_entry_get_text(GTK_ENTRY(entry_display)));
+        gdouble result=0;
+
+        if (g_strcmp0(label, "sin") == 0) result=sin(value);
+        else if (g_strcmp0(label, "cos") == 0) result=cos(value);
+        else if (g_strcmp0(label, "tan") == 0) result=tan(value);
+        else if (g_strcmp0(label, "log") == 0) result=log10(value);
+        else if (g_strcmp0(label, "sqrt") == 0) result=sqrt(value);
+
+        gchar *result_text=g_strdup_printf("%.2f", result);
+        update_display(result_text);
+        g_free(result_text);
     } else {
         gchar *current_text=g_strdup(gtk_entry_get_text(GTK_ENTRY(entry_display)));
-        
-        // Handle operations and appending numbers
-        if (g_strcmp0(label, "+") == 0 || g_strcmp0(label, "-") == 0 ||
-            g_strcmp0(label, "*") == 0 || g_strcmp0(label, "/") == 0) {
-            first_number=atof(current_text);
-            operation=label[0];
-            gtk_entry_set_text(GTK_ENTRY(entry_display), "");
-        } else if (advanced_mode && (g_strcmp0(label, "sin") == 0 || g_strcmp0(label, "cos") == 0 || 
-                  g_strcmp0(label, "tan") == 0 || g_strcmp0(label, "sqrt") == 0 || 
-                  g_strcmp0(label, "log") == 0 || g_strcmp0(label, "ln") == 0 || 
-                  g_strcmp0(label, "exp") == 0)) {
-            gdouble value=atof(current_text);
-            gdouble result=0;
-
-            if (g_strcmp0(label, "sin") == 0) result=sin(value);
-            else if (g_strcmp0(label, "cos") == 0) result=cos(value);
-            else if (g_strcmp0(label, "tan") == 0) result=tan(value);
-            else if (g_strcmp0(label, "sqrt") == 0) result=sqrt(value);
-            else if (g_strcmp0(label, "log") == 0) result=log10(value);
-            else if (g_strcmp0(label, "ln") == 0) result=log(value);
-            else if (g_strcmp0(label, "exp") == 0) result=exp(value);
-
-            gchar *result_text=g_strdup_printf("%.2f", result);
-            gtk_entry_set_text(GTK_ENTRY(entry_display), result_text);
-            g_free(result_text);
-        } else {
-            gchar *new_text=g_strjoin("", current_text, label, NULL);
-            gtk_entry_set_text(GTK_ENTRY(entry_display), new_text);
-            g_free(new_text);
-        }
+        gchar *new_text=g_strjoin("", current_text, label, NULL);
+        update_display(new_text);
+        g_free(new_text);
         g_free(current_text);
     }
 }
@@ -124,31 +162,16 @@ void calculate_result() {
     gdouble result=0;
 
     switch (operation) {
-        case '+':
-            result=first_number + second_number;
-            break;
-        case '-':
-            result=first_number - second_number;
-            break;
-        case '*':
-            result=first_number * second_number;
-            break;
-        case '/':
-            if (second_number != 0) {
-                result=first_number / second_number;
-            } else {
-                gtk_entry_set_text(GTK_ENTRY(entry_display), "Error");
-                g_free(current_text);
-                return;
-            }
-            break;
-        default:
-            result=second_number;
-            break;
+        case '+': result=first_number + second_number; break;
+        case '-': result=first_number - second_number; break;
+        case '*': result=first_number * second_number; break;
+        case '/': result=second_number != 0 ? first_number / second_number : 0; break;
+        case '%': result=fmod(first_number, second_number); break;
+        default: result=second_number; break;
     }
 
     gchar *result_text=g_strdup_printf("%.2f", result);
-    gtk_entry_set_text(GTK_ENTRY(entry_display), result_text);
+    update_display(result_text);
     g_free(result_text);
     g_free(current_text);
 }
@@ -169,40 +192,5 @@ void show_author_info() {
         "Author: Jay Mee @ J~Net 2024");
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
-}
-
-// Function to toggle advanced mode
-void toggle_advanced_mode() {
-    const gchar *advanced_labels[]={
-        "sin", "cos", "tan", "sqrt",
-        "log", "ln", "exp"
-    };
-    
-    if (!advanced_mode) {
-        for (int i=0; i < 7; i++) {
-            GtkWidget *adv_button=gtk_button_new_with_label(advanced_labels[i]);
-            g_signal_connect(adv_button, "clicked", G_CALLBACK(on_button_click), (gpointer)advanced_labels[i]);
-            gtk_widget_set_size_request(adv_button, 60, 60);
-            gtk_grid_attach(GTK_GRID(grid), adv_button, i % 4, 5 + (i / 4), 1, 1);
-        }
-        gtk_window_resize(GTK_WINDOW(gtk_widget_get_toplevel(entry_display)), 300, 500);
-    } else {
-        GList *children=gtk_container_get_children(GTK_CONTAINER(grid));
-        for (GList *iter=children; iter!=NULL; iter=iter->next) {
-            GtkWidget *widget=(GtkWidget *)iter->data;
-            const gchar *label=gtk_button_get_label(GTK_BUTTON(widget));
-            for (int i=0; i < 7; i++) {
-                if (g_strcmp0(label, advanced_labels[i]) == 0) {
-                    gtk_widget_destroy(widget);
-                    break;
-                }
-            }
-        }
-        g_list_free(children);
-        gtk_window_resize(GTK_WINDOW(gtk_widget_get_toplevel(entry_display)), 300, 400);
-    }
-
-    advanced_mode=!advanced_mode;
-    gtk_widget_show_all(gtk_widget_get_toplevel(entry_display));
 }
 
