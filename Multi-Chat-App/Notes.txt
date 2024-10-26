@@ -1,0 +1,27 @@
+
+
+
+
+
+sudo apt update
+sudo apt install libjson-c-dev -y
+
+
+
+gcc -o chat-app chat-app.c `pkg-config --cflags --libs gtk+-3.0 json-c`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
