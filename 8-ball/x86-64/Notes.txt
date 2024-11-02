@@ -1,0 +1,6 @@
+
+
+gcc 8ball.c -o 8ball $(pkg-config --cflags --libs gtk+-3.0)
+
+
+
