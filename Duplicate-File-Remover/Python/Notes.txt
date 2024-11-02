@@ -1,0 +1,15 @@
+
+
+
+
+venv
+
+pip install PyGObject
+
+python run.py
+
+
+
+
+
+

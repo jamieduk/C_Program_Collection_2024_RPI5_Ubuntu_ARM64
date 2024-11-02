@@ -1,0 +1,24 @@
+File Duplicate Remover
+
+https://github.com/jamieduk/Duplicate-File-Remover
+
+
+sudo apt update
+sudo apt install -y build-essential gobject-introspection libgirepository1.0-dev
+sudo apt install -y libssl-dev
+
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Arm bibary already supplied but if using x86 64 then recomile!
+and build from source!
+
+gcc -o duplicate-remover duplicate-remover.c -lcrypto `pkg-config --cflags --libs gtk+-3.0`
+
+
+After you can compiled the c program and made the binary run ./install.sh to install to your system!
+
+
+
+
