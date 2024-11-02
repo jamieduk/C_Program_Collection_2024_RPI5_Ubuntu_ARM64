@@ -1,0 +1,10 @@
+
+
+gcc Area_of_Square.c -o Area_of_Square `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+./Area_of_Square
+
+
+
