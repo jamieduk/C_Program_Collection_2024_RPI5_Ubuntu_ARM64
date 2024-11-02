@@ -1,0 +1,17 @@
+
+
+
+gcc -o XOR-Crypto XOR-Crypto.c $(pkg-config --cflags --libs gtk+-3.0)
+
+
+
+
+./XOR-Crypto
+
+
+
+
+
+
+
+
