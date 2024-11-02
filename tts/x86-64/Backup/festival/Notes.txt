@@ -1,0 +1,10 @@
+
+g++ -o tts tts.cpp
+
+
+
+tts with no internet written in c for a tts program that has a gui and a say it box also a drop down with all available voices nd 1st voice is default voice
+
+for use on linux compiled on linux using espeak not festival show the .cpp code that will do this and compile
+
+

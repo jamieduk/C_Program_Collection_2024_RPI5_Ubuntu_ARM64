@@ -1,0 +1,17 @@
+
+
+
+sudo apt install -y libgtk-3-dev espeak
+
+
+g++ tts.cpp -o tts-app `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+
+tts with no internet written in c for a tts program that has a gui and a say it box also a drop down with all available voices with 1st voice (en) is default voice
+
+for use on linux compiled on linux using espeak not festival or espeak-ng, show the .cpp code that will do this and compile code for it, no placeholders the code must fully work without espeak-ng remember easpeak is installed not easpeak-ng the binary for it is /usr/bin/espeak
+
+
+
