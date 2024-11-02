@@ -1,0 +1,11 @@
+
+
+
+gcc -o binary_to_decimal "BinaryToDecimal.c" `pkg-config --cflags --libs gtk+-3.0`
+
+
+./binary_to_decimal
+
+
+
+
