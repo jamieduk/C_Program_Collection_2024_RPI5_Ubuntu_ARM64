@@ -1,12 +1,31 @@
 
 
 
-gcc -o XOR-Crypto XOR-Crypto.c $(pkg-config --cflags --libs gtk+-3.0)
+gcc -o xor-crypto xor-crypto.c $(pkg-config --cflags --libs gtk+-3.0)
 
 
 
 
-./XOR-Crypto
+./xor-crypto
+
+
+
+
+if you have installed it and loaded it from its install location find the files with following command
+
+
+which xor-crypto
+
+
+
+Note:
+
+Default path for install is 
+
+/usr/local/bin/xor-crypto
+
+
+No output is exp as it silently creates enc / dec file in above location or run location if different from install path!
 
 
 
