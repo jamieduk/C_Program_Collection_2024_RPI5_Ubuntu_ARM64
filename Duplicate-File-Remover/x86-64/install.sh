@@ -9,5 +9,5 @@ sudo chmod +x $1
 
 echo "Installing..."
 
-sudo cp ./duplicate-remover /usr/local/bin/
-x /usr/local/bin/duplicate-remover
+sudo cp ./$1 /usr/local/bin/
+x /usr/local/bin/$1
