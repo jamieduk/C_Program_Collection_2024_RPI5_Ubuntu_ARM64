@@ -1,0 +1,12 @@
+
+
+
+gcc BasicGame.c -o BasicGameApp `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+./BasicGameApp
+
+
+
+
