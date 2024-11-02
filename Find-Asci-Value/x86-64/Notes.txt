@@ -1,0 +1,15 @@
+
+
+
+gcc -o FindAsciiValue FindAsciiValue.c `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+
+
+
+./FindAsciiValue
+
+
+
+
