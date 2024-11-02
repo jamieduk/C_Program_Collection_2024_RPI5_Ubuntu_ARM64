@@ -1,0 +1,26 @@
+
+
+
+
+
+
+gcc server.c -o server `pkg-config --cflags --libs gtk+-3.0`
+gcc client.c -o client `pkg-config --cflags --libs gtk+-3.0`
+
+
+All In One
+
+gcc -g -o aio aio.c `pkg-config --cflags --libs gtk+-3.0` -pthread
+
+
+
+
+
+
+
+
+
+
+
+
+

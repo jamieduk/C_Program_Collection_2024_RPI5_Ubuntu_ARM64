@@ -1,0 +1,12 @@
+
+
+gcc client.c -o client `pkg-config --cflags --libs gtk+-3.0` -Wall
+
+
+
+gcc server.c -o server `pkg-config --cflags --libs gtk+-3.0` -Wall
+
+
+
+
+
