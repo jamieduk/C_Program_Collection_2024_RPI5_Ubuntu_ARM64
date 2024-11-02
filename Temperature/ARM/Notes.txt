@@ -1,0 +1,15 @@
+
+
+
+
+gcc -o Temperature Temperature.c `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+
+./Temperature
+
+
+
+
+
