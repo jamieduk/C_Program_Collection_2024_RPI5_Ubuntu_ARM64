@@ -1,0 +1,12 @@
+
+
+
+
+
+
+gcc AreaAndCircumference.c -o AreaAndCircumference `pkg-config --cflags --libs gtk+-3.0` -lm
+
+
+./AreaAndCircumference 
+
+
