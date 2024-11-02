@@ -1,0 +1,8 @@
+
+
+
+
+gcc -o anagram anagram.c
+
+./anagram
+
