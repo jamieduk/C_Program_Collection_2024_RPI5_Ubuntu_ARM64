@@ -1,0 +1,11 @@
+
+
+
+gcc -o times-table times-table.c `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+
+
+
+
