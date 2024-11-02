@@ -1,0 +1,14 @@
+
+
+
+gcc `pkg-config --cflags gtk+-3.0` -o text2binary text2binary.c `pkg-config --libs gtk+-3.0` -lm
+
+
+
+
+./text2binary
+
+
+
+
+
