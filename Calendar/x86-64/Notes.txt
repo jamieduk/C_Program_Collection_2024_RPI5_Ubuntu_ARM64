@@ -1,0 +1,13 @@
+
+
+
+
+gcc -o calendar calendar.c `pkg-config --cflags --libs gtk+-3.0`
+
+
+./calendar
+
+
+
+
+
