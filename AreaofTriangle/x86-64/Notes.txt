@@ -1,0 +1,12 @@
+
+
+gcc Area_of_Triangle.c -o AreaofTriangle `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+./AreaofTriangle
+
+
+
+
+
