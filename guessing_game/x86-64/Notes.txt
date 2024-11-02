@@ -1,0 +1,16 @@
+
+
+
+
+
+gcc -o guessing_game guessing_game.c `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+
+
+
+
+
+
+
