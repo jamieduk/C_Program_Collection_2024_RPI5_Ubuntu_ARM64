@@ -1,0 +1,11 @@
+
+
+
+gcc clock.c -o clock `pkg-config --cflags --libs gtk+-3.0`
+
+
+./clock
+
+
+
+
