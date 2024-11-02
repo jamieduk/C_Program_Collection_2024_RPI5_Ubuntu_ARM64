@@ -1,0 +1,10 @@
+
+
+gcc AnagramFinder.c -o AnagramFinder `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+./AnagramFinder
+
+
+
