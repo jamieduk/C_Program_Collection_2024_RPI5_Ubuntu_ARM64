@@ -1,11 +1,15 @@
-Simple-Calculator-For-Ubuntu
 
 
 
-https://github.com/jamieduk/Simple-Calculator-For-Ubuntu
 
 
-gcc -o simple-calc simple-calc.c `pkg-config --cflags --libs gtk+-3.0` -lm
+
+
+gcc -o calc calc.c `pkg-config --cflags --libs gtk+-3.0` -lm
+
+
+
+
 
 
 
