@@ -1,0 +1,7 @@
+
+
+gcc stopwatch.c -o stopwatch `pkg-config --cflags --libs gtk+-3.0`
+
+
+
+./stopwatch
