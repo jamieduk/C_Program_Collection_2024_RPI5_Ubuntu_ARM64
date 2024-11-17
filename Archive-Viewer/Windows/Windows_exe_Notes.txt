@@ -1,0 +1,35 @@
+Code for Archive Viewer in C#
+
+sudo apt update
+sudo apt install -y dirmngr gnupg apt-transport-https ca-certificates
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+
+sudo apt update
+sudo apt install -y mono-complete gtk-sharp2
+
+
+
+
+mcs -pkg:gtk-sharp-3.0 ArchiveViewer.cs -out:ArchiveViewer.exe
+mono ArchiveViewer.exe
+
+
+
+Explanation of Key Sections
+Open Archive: The OnOpenArchive method opens a dialog to select a zip file. It calls LoadArchiveContents to load and display the file contents.
+Display Archive Contents: LoadArchiveContents lists each file in the archive.
+Single File Extraction: Double-clicking a file name calls ExtractSingleFile, which extracts the selected file into a folder named after the archive.
+Extract All: OnExtractAll extracts all files to a similar folder structure.
+About Button: Shows the author's name, "Jay Mee," in a simple dialog.
+Compilation Instructions
+Save the code to a file named ArchiveViewer.cs.
+Run the following commands in the terminal to compile and run the application:
+
+mcs -pkg:gtk-sharp-3.0 ArchiveViewer.cs -out:ArchiveViewer.exe
+mono ArchiveViewer.exe
+Dependencies
+Make sure you have GtkSharp installed on your Linux system to run this application:
+
+
+
