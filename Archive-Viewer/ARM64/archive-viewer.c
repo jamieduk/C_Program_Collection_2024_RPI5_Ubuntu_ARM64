@@ -14,6 +14,36 @@
 #include <sys/stat.h>
 #include <time.h>
 
+// Add these global variables at the top with other globals
+static gboolean replace_all=FALSE;
+static gboolean skip_all=FALSE;
+
+// Add this helper function to handle the overwrite dialog
+GtkResponseType show_overwrite_dialog(GtkWindow *parent, const char *filename) {
+    GtkWidget *dialog=gtk_dialog_new_with_buttons("File Exists",
+                                                   parent,
+                                                   GTK_DIALOG_MODAL,
+                                                   "Replace", GTK_RESPONSE_YES,
+                                                   "Replace All", GTK_RESPONSE_APPLY,
+                                                   "Skip", GTK_RESPONSE_NO,
+                                                   "Skip All", GTK_RESPONSE_REJECT,
+                                                   "Cancel", GTK_RESPONSE_CANCEL,
+                                                   NULL);
+
+    GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    char *message=g_strdup_printf("The file '%s' already exists.\nDo you want to replace it?", filename);
+    GtkWidget *label=gtk_label_new(message);
+    g_free(message);
+
+    gtk_container_add(GTK_CONTAINER(content_area), label);
+    gtk_widget_show_all(dialog);
+
+    GtkResponseType response=gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    return response;
+}
+
+
 // Forward declarations
 void load_archive_contents(const gchar *path, GtkWindow *parent);
 void show_message(GtkWindow *parent, const gchar *message, GtkMessageType type);
@@ -146,13 +176,18 @@ void extract_all_to(const char *extract_path, GtkWindow *parent) {
         return;
     }
 
+    // Reset global flags
+    replace_all=FALSE;
+    skip_all=FALSE;
+
     struct archive *arch=archive_read_new();
     struct archive *ext=archive_write_disk_new();
     struct archive_entry *entry;
     
     archive_read_support_format_all(arch);
     archive_read_support_filter_all(arch);
-    archive_write_disk_set_options(ext, ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_PERM | ARCHIVE_EXTRACT_ACL | ARCHIVE_EXTRACT_FFLAGS);
+    archive_write_disk_set_options(ext, ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_PERM | 
+                                      ARCHIVE_EXTRACT_ACL | ARCHIVE_EXTRACT_FFLAGS);
 
     if (archive_read_open_filename(arch, archivePath, 10240) != ARCHIVE_OK) {
         show_error(parent, archive_error_string(arch));
@@ -162,11 +197,45 @@ void extract_all_to(const char *extract_path, GtkWindow *parent) {
     }
 
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progressBar), 0.0);
+    gboolean extraction_cancelled=FALSE;
 
-    while (archive_read_next_header(arch, &entry) == ARCHIVE_OK) {
+    while (archive_read_next_header(arch, &entry) == ARCHIVE_OK && !extraction_cancelled) {
         const char *current_file=archive_entry_pathname(entry);
         char *full_path=g_build_filename(extract_path, current_file, NULL);
         
+        // Check if file exists
+        if (g_file_test(full_path, G_FILE_TEST_EXISTS) && !replace_all && !skip_all) {
+            GtkResponseType response=show_overwrite_dialog(parent, current_file);
+            
+            switch (response) {
+                case GTK_RESPONSE_YES:
+                    // Replace this file
+                    break;
+                case GTK_RESPONSE_APPLY:
+                    replace_all=TRUE;
+                    break;
+                case GTK_RESPONSE_NO:
+                    g_free(full_path);
+                    continue;
+                case GTK_RESPONSE_REJECT:
+                    skip_all=TRUE;
+                    g_free(full_path);
+                    continue;
+                case GTK_RESPONSE_CANCEL:
+                    extraction_cancelled=TRUE;
+                    g_free(full_path);
+                    continue;
+                default:
+                    g_free(full_path);
+                    continue;
+            }
+        }
+
+        if (skip_all) {
+            g_free(full_path);
+            continue;
+        }
+
         archive_entry_set_pathname(entry, full_path);
         
         if (archive_write_header(ext, entry) == ARCHIVE_OK) {
@@ -190,8 +259,12 @@ void extract_all_to(const char *extract_path, GtkWindow *parent) {
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progressBar), 1.0);
     archive_read_free(arch);
     archive_write_free(ext);
-    show_message(parent, "Files extracted successfully!", GTK_MESSAGE_INFO);
+
+    if (!extraction_cancelled) {
+        show_message(parent, "Files extracted successfully!", GTK_MESSAGE_INFO);
+    }
 }
+
 
 void on_extract_to(GtkWidget *widget, gpointer data) {
     GtkWidget *dialog=gtk_file_chooser_dialog_new("Choose Extract Location",
