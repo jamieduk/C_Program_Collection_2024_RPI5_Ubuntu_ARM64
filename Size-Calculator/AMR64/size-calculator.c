@@ -1,11 +1,8 @@
-// Made By Jay @ J~Net 2024
-//
-// gcc size-calculator.c -o size-calculator `pkg-config --cflags --libs gtk+-3.0`
-//
 //
 // Made By Jay @ J~Net 2024
 //
-// gcc size-calculator.c -o size-calculator `pkg-config --cflags --libs gtk+-3.0`
+// gcc size-calculator.c -o size-calculator $(pkg-config --cflags --libs gtk+-3.0)
+//
 //
 #include <stdio.h>
 #include <stdlib.h>
