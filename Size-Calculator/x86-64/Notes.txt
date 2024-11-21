@@ -1,0 +1,19 @@
+
+
+sudo apt update && sudo apt install -y libgtk-3-dev
+
+
+gcc size-calculator.c -o size-calculator $(pkg-config --cflags --libs gtk+-3.0)
+
+
+./size-calculator
+
+
+For some folders you may need sudo access!
+
+
+sudo ./size-calculator
+
+
+
+
