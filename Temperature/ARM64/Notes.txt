@@ -1,0 +1,25 @@
+
+
+
+
+gcc -o temperature temperature.c `pkg-config --cflags --libs gtk+-3.0`
+
+
+./install.sh temperature
+
+
+
+
+Example For Minus (-)
+
+
+To convert Fahrenheit (𝐹F) to Celsius (𝐶C), use the formula:
+
+𝐶=59×(𝐹−32)C=95​ ×(F−32)
+Substituting −35−35 Fahrenheit:
+
+𝐶=59×(−35−32)C=95​
+ ×(−35−32)𝐶=59×(−67)C=95​ ×(−67)𝐶≈−37.22 C≈−37.22 
+ So,−35∘𝐹−35∘
+ F is approximately−37.22∘𝐶−37.22∘ C.
+ 
