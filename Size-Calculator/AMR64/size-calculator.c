@@ -18,6 +18,7 @@
 GtkWidget *include_listbox, *exclude_listbox, *result_label;
 GtkWidget *include_button, *exclude_button, *remove_include_button, *remove_exclude_button;
 GtkWidget *exclude_name_entry, *add_name_exclude_button;
+GtkWidget *about_button; // About button
 
 // Node structure for dynamic folder lists
 typedef struct Node {
@@ -223,7 +224,7 @@ int main(int argc, char *argv[]) {
     gtk_container_set_border_width(GTK_CONTAINER(vbox), 10);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    // Include folder buttons
+    // Include folder buttons (above)
     include_button=gtk_button_new_with_label("Add Include Folder");
     g_signal_connect(include_button, "clicked", G_CALLBACK(open_folder_dialog), include_button);
     gtk_box_pack_start(GTK_BOX(vbox), include_button, FALSE, FALSE, 0);
@@ -232,7 +233,7 @@ int main(int argc, char *argv[]) {
     include_listbox=gtk_list_box_new();
     gtk_box_pack_start(GTK_BOX(vbox), include_listbox, TRUE, TRUE, 0);
 
-    // Exclude folder buttons
+    // Exclude folder buttons (above)
     exclude_button=gtk_button_new_with_label("Add Exclude Folder");
     g_signal_connect(exclude_button, "clicked", G_CALLBACK(open_folder_dialog), exclude_button);
     gtk_box_pack_start(GTK_BOX(vbox), exclude_button, FALSE, FALSE, 0);
@@ -241,7 +242,7 @@ int main(int argc, char *argv[]) {
     exclude_listbox=gtk_list_box_new();
     gtk_box_pack_start(GTK_BOX(vbox), exclude_listbox, TRUE, TRUE, 0);
 
-    // Entry and button to add name-based exclusions
+    // Add Name Exclusion button (above)
     exclude_name_entry=gtk_entry_new();
     gtk_box_pack_start(GTK_BOX(vbox), exclude_name_entry, FALSE, FALSE, 0);
 
@@ -249,24 +250,16 @@ int main(int argc, char *argv[]) {
     g_signal_connect(add_name_exclude_button, "clicked", G_CALLBACK(add_exclusion_by_name), NULL);
     gtk_box_pack_start(GTK_BOX(vbox), add_name_exclude_button, FALSE, FALSE, 0);
 
-    // Remove Include/Exclude buttons
-    remove_include_button=gtk_button_new_with_label("Remove Include Folder");
-    remove_exclude_button=gtk_button_new_with_label("Remove Exclude Folder");
-    g_signal_connect(remove_include_button, "clicked", G_CALLBACK(remove_folder_from_list), NULL);
-    g_signal_connect(remove_exclude_button, "clicked", G_CALLBACK(remove_folder_from_list), NULL);
-
-    gtk_box_pack_start(GTK_BOX(vbox), remove_include_button, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), remove_exclude_button, FALSE, FALSE, 0);
-
-    // Result label
+    // Total size label
     result_label=gtk_label_new("Total Size:\n0 TB\n0 GB\n0 MB");
-    gtk_box_pack_start(GTK_BOX(vbox), result_label, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), result_label, FALSE, FALSE, 0);
 
-    // About button
-    GtkWidget *about_button=gtk_button_new_with_label("About");
+    // About button (added)
+    about_button=gtk_button_new_with_label("About");
     g_signal_connect(about_button, "clicked", G_CALLBACK(show_about), NULL);
     gtk_box_pack_start(GTK_BOX(vbox), about_button, FALSE, FALSE, 0);
 
+    // Show the window
     gtk_widget_show_all(window);
     gtk_main();
 
