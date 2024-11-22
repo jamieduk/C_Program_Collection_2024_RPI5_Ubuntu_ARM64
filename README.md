@@ -111,9 +111,12 @@ A basic text-to-speech program for converting text into spoken words.
 Cross-Platform: Designed for both Raspberry Pi (ARM 64-bit) and Linux (x86 64-bit).
 Diverse Utilities: From encryption tools to fun games, the repository covers a wide spectrum of use cases.
 Optimized for Performance: Efficient code that leverages the capabilities of both ARM and x86 architectures.
+
 📂 How to Use
+
 Clone the repository:
 git clone https://github.com/jamieduk/C_Program_Collection_2024_RPI5_Ubuntu_ARM64.git
+
 cd your-repo-name
 Compile or run the program as needed. Example for C programs:
 gcc program_name.c -o program_name
