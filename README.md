@@ -113,7 +113,7 @@ Diverse Utilities: From encryption tools to fun games, the repository covers a w
 Optimized for Performance: Efficient code that leverages the capabilities of both ARM and x86 architectures.
 📂 How to Use
 Clone the repository:
-git clone https://github.com/yourusername/your-repo-name.git
+git clone https://github.com/jamieduk/C_Program_Collection_2024_RPI5_Ubuntu_ARM64.git
 cd your-repo-name
 Compile or run the program as needed. Example for C programs:
 gcc program_name.c -o program_name
