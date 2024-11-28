@@ -1,14 +1,9 @@
 #!/bin/bash
 # (c) J~Net 2024
 #
-function x(){
-sudo chmod +x $1
-
-}
-
-x ./$1
-
-sudo cp ./$1 /usr/bin/
-
-echo "Installed!"
-
+echo "Installing $1..."
+echo ""
+sudo cp $1 /usr/bin/
+sudo chmod +x /usr/bin/$1
+echo "All Done!"
+echo ""

@@ -1,5 +1,3 @@
-// gcc -o calc calc.c `pkg-config --cflags --libs gtk+-3.0` -lm
-//
 #include <gtk/gtk.h>
 #include <math.h>
 #include <string.h>
@@ -11,6 +9,7 @@ void show_author_info();
 void copy_to_clipboard(GtkWidget *widget);
 void toggle_advanced_mode(GtkWidget *widget);
 void update_display(const gchar *text);
+gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data);
 
 // Global variables
 GtkWidget *entry_display, *grid_advanced;
@@ -50,15 +49,15 @@ int main(int argc, char *argv[]) {
         "4", "5", "6", "-",
         "7", "8", "9", "*",
         "0", ".", "=", "/",
-        "CLR", "Copy", "MC", 
-        "%", "sin","cos", "tan",
-        "log","sqrt", "M+", "MR", 
+        "CLR", "Copy", "MC",
+        "%", "sin", "cos", "tan",
+        "log", "sqrt", "M+", "MR",
         "About"
     };
 
     // Create buttons and attach to grid
     int num_buttons=sizeof(button_labels) / sizeof(button_labels[0]);
-    for (int i=0; i<num_buttons; i++) {
+    for (int i=0; i < num_buttons; i++) {
         GtkWidget *button=gtk_button_new_with_label(button_labels[i]);
         g_signal_connect(button, "clicked", G_CALLBACK(on_button_click), (gpointer)button_labels[i]);
         gtk_widget_set_size_request(button, 60, 60);
@@ -71,7 +70,7 @@ int main(int argc, char *argv[]) {
     gtk_grid_set_column_spacing(GTK_GRID(grid_advanced), 0);
     gtk_grid_attach(GTK_GRID(grid), grid_advanced, 0, 6, 4, 4);
     const gchar *advanced_labels[]={"sin", "cos", "tan", "log", "sqrt"};
-    for (int i=0; i<5; i++) {
+    for (int i=0; i < 5; i++) {
         GtkWidget *adv_button=gtk_button_new_with_label(advanced_labels[i]);
         g_signal_connect(adv_button, "clicked", G_CALLBACK(on_button_click), (gpointer)advanced_labels[i]);
         gtk_widget_set_size_request(adv_button, 60, 60);
@@ -81,6 +80,9 @@ int main(int argc, char *argv[]) {
 
     // Connect the destroy signal for the window
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+
+    // Connect the key press event for the window
+    g_signal_connect(window, "key-press-event", G_CALLBACK(on_key_press), NULL);
 
     // Show all widgets in the window
     gtk_widget_show_all(window);
@@ -187,5 +189,100 @@ void show_author_info() {
         "Author: Jay Mee @ J~Net 2024");
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
+}
+
+// Key press event handler
+gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data) {
+    // Handle numerical pad keys and standard keyboard numbers
+    switch (event->keyval) {
+        case GDK_KEY_0:
+        case GDK_KEY_KP_0:
+        case GDK_KEY_KP_Insert:
+            on_button_click(NULL, "0");
+            break;
+        case GDK_KEY_1:
+        case GDK_KEY_KP_1:
+        case GDK_KEY_KP_End:
+            on_button_click(NULL, "1");
+            break;
+        case GDK_KEY_2:
+        case GDK_KEY_KP_2:
+        case GDK_KEY_KP_Down:
+            on_button_click(NULL, "2");
+            break;
+        case GDK_KEY_3:
+        case GDK_KEY_KP_3:
+        case GDK_KEY_KP_Page_Down:
+            on_button_click(NULL, "3");
+            break;
+        case GDK_KEY_4:
+        case GDK_KEY_KP_4:
+        case GDK_KEY_KP_Left:
+            on_button_click(NULL, "4");
+            break;
+        case GDK_KEY_5:
+        case GDK_KEY_KP_5:
+        case GDK_KEY_KP_Begin:
+            on_button_click(NULL, "5");
+            break;
+        case GDK_KEY_6:
+        case GDK_KEY_KP_6:
+        case GDK_KEY_KP_Right:
+            on_button_click(NULL, "6");
+            break;
+        case GDK_KEY_7:
+        case GDK_KEY_KP_7:
+        case GDK_KEY_KP_Home:
+            on_button_click(NULL, "7");
+            break;
+        case GDK_KEY_8:
+        case GDK_KEY_KP_8:
+        case GDK_KEY_KP_Up:
+            on_button_click(NULL, "8");
+            break;
+        case GDK_KEY_9:
+        case GDK_KEY_KP_9:
+        case GDK_KEY_KP_Page_Up:
+            on_button_click(NULL, "9");
+            break;
+        case GDK_KEY_period:
+        case GDK_KEY_KP_Decimal:
+        case GDK_KEY_KP_Delete:
+            on_button_click(NULL, ".");
+            break;
+        case GDK_KEY_plus:
+        case GDK_KEY_KP_Add:
+            on_button_click(NULL, "+");
+            break;
+        case GDK_KEY_minus:
+        case GDK_KEY_KP_Subtract:
+            on_button_click(NULL, "-");
+            break;
+        case GDK_KEY_asterisk:
+        case GDK_KEY_KP_Multiply:
+            on_button_click(NULL, "*");
+            break;
+        case GDK_KEY_slash:
+        case GDK_KEY_KP_Divide:
+            on_button_click(NULL, "/");
+            break;
+        case GDK_KEY_Return:
+        case GDK_KEY_KP_Enter:
+            calculate_result();
+            break;
+        case GDK_KEY_BackSpace:
+            // Handle backspace to clear the last character
+            gchar *current_text=g_strdup(gtk_entry_get_text(GTK_ENTRY(entry_display)));
+            if (g_utf8_strlen(current_text, -1) > 0) {
+                gchar *new_text=g_strndup(current_text, g_utf8_strlen(current_text, -1) - 1);
+                update_display(new_text);
+                g_free(new_text);
+            }
+            g_free(current_text);
+            break;
+        default:
+            break;
+    }
+    return FALSE;
 }
 
